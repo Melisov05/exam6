@@ -34,12 +34,64 @@ public class ExamServer extends BasicServer{
         registerGet("/appointments/day", this::dayAppointmentsHandler);
         registerPost("/appointments/add", this::addAppointmentHandler);
         registerPost("/appointments/delete", this::deleteAppointmentHandler);
+        registerPost("/appointments/windowAdd", this::addAppointmentWindowHandler);
     }
+
+    private void addAppointmentWindowHandler(HttpExchange exchange) {
+        if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            try {
+                String formData = new BufferedReader(
+                        new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8))
+                        .lines().collect(Collectors.joining("\n"));
+
+                Map<String, String> parsedFormData = Utils.parseUrlEncoded(formData, "&");
+
+                LocalDate date = LocalDate.parse(parsedFormData.get("date"));
+                LocalTime time = LocalTime.parse(parsedFormData.get("time"));
+                LocalDateTime dateTime = LocalDateTime.of(date, time);
+
+
+                if (dateTime.isBefore(LocalDateTime.now())) {
+                    sendErrorResponse(exchange, "Нельзя записать на прошедшую дату.");
+                    return;
+                }
+
+                String fullName = parsedFormData.get("fullName");
+                LocalDate dob = LocalDate.parse(parsedFormData.get("dob"));
+                String patientType = parsedFormData.get("patientType");
+                String symptoms = parsedFormData.get("symptoms");
+
+                Patient patient = new Patient(fullName, dob, patientType, symptoms);
+                Appointment newAppointment = new Appointment(dateTime, patient);
+
+                appointmentsManager.addAppointment(newAppointment);
+
+                String redirectPath = "/appointments";
+                redirect303(exchange, redirectPath);
+            } catch (DateTimeParseException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    private void sendErrorResponse(HttpExchange exchange, String errorMessage) {
+        try{
+            exchange.sendResponseHeaders(400, errorMessage.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(errorMessage.getBytes());
+            os.close();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
 
     private void deleteAppointmentHandler(HttpExchange exchange) {
         if ("POST".equals(exchange.getRequestMethod())) {
             try {
-                InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8);
+                InputStreamReader isr = new InputStreamReader
+                        (exchange.getRequestBody(), StandardCharsets.UTF_8);
                 BufferedReader br = new BufferedReader(isr);
                 String formData = br.lines().collect(Collectors.joining("&"));
                 Map<String, String> parsedFormData = Utils.parseUrlEncoded(formData, "&");
@@ -61,7 +113,8 @@ public class ExamServer extends BasicServer{
     private void addAppointmentHandler(HttpExchange exchange) {
         if ("POST".equals(exchange.getRequestMethod())) {
             try {
-                InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8);
+                InputStreamReader isr = new
+                        InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8);
                 BufferedReader br = new BufferedReader(isr);
                 String formData = br.lines().collect(Collectors.joining("&"));
                 Map<String, String> parsedFormData = Utils.parseUrlEncoded(formData, "&");
@@ -76,7 +129,8 @@ public class ExamServer extends BasicServer{
                 Appointment newAppointment = new Appointment(dateTime, new Patient(fullName, patientType, symptoms));
                 appointmentsManager.addAppointment(newAppointment);
 
-                String redirectPath = "/appointments/day?date=" + date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                String redirectPath = "/appointments/day?date=" +
+                        date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                 redirect303(exchange, redirectPath);
             } catch (DateTimeParseException e) {
                 e.printStackTrace();
@@ -143,7 +197,6 @@ public class ExamServer extends BasicServer{
         Map<String, Object> dataModel = new HashMap<>();
         dataModel.put("appointments", appointments);
 
-        System.out.println(dataModel.get("appointments"));
         renderTemplate(exchange, "data/appointments.ftlh", dataModel);
 
     }
