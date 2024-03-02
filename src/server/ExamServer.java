@@ -12,7 +12,6 @@ import freemarker.template.TemplateExceptionHandler;
 import utils.Utils;
 
 import java.io.*;
-import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

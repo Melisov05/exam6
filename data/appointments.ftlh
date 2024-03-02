@@ -22,7 +22,7 @@
             <tbody>
                 <#list appointments as appointment>
                     <tr>
-                        <!-- Format the time -->
+
                         <td>${appointment.formattedTime}</td>
                         <td>${appointment.patient.fullName}</td>
                         <td>${appointment.patient.dateOfBirth!"Не указана"}</td>
