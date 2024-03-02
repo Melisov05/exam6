@@ -30,4 +30,10 @@ public class Patient {
         this.patientType = patientType;
         this.symptoms = symptoms;
     }
+
+    public Patient(String fullName, String patientType, String symptoms) {
+        this.fullName = fullName;
+        this.patientType = patientType;
+        this.symptoms = symptoms;
+    }
 }

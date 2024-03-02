@@ -11,14 +11,14 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 import utils.Utils;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,7 +33,37 @@ public class ExamServer extends BasicServer{
         registerGet("/appointments", this::appointmentsHandler);
         registerGet("/monthlyAppointments", this::monthlyAppointmentsHandler);
         registerGet("/appointments/day", this::dayAppointmentsHandler);
+        registerPost("/appointments/add", this::addAppointmentHandler);
     }
+
+    private void addAppointmentHandler(HttpExchange exchange) {
+        if ("POST".equals(exchange.getRequestMethod())) {
+            try {
+                InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8);
+                BufferedReader br = new BufferedReader(isr);
+                String formData = br.lines().collect(Collectors.joining("&"));
+                Map<String, String> parsedFormData = Utils.parseUrlEncoded(formData, "&");
+
+                LocalDate date = LocalDate.parse(parsedFormData.get("date"));
+                LocalTime time = LocalTime.parse(parsedFormData.get("time"));
+                LocalDateTime dateTime = LocalDateTime.of(date, time);
+                String fullName = parsedFormData.get("fullName");
+                String patientType = parsedFormData.get("patientType");
+                String symptoms = parsedFormData.get("symptoms");
+
+
+                Appointment newAppointment = new Appointment(dateTime, new Patient(fullName, patientType, symptoms));
+                appointmentsManager.addAppointment(newAppointment);
+
+                String redirectPath = "/appointments/day?date=" + date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                redirect303(exchange, redirectPath);
+            } catch (DateTimeParseException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
 
     private void monthlyAppointmentsHandler(HttpExchange exchange) {
         List<Appointment> appointments = getAppointmentsForCurrentMonth();
@@ -105,6 +135,11 @@ public class ExamServer extends BasicServer{
         return appointments.stream()
                 .collect(Collectors.groupingBy(appointment -> appointment.getAppointmentTime().toLocalDate()));
     }
+
+    protected final void registerPost(String route, RouteHandler handler) {
+        getRoutes().put("POST " + route, handler);
+    }
+
 
     private void formatDate(List<Appointment> appointments, String pattern) {
         for (Appointment appointment : appointments) {
