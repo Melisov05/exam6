@@ -9,6 +9,7 @@
 <body>
 <div class="container mt-4">
     <h2>Appointments for the Current Month</h2>
+    <h3>Today is: ${today}</h3>
     <#list groupedAppointments?keys as date>
         <div class="list-group mt-3">
             <a href="/appointments/day?date=${date}" class="list-group-item <#if date == today>list-group-item-info</#if>" aria-current="true">

@@ -49,7 +49,7 @@ public class ExamServer extends BasicServer{
                 ));
 
         dataModel.put("groupedAppointments", stringKeyedAppointments);
-        dataModel.put("today", LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        dataModel.put("today", LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
         renderTemplate(exchange, "data/monthlyAppointments.ftlh", dataModel);
     }
 
@@ -84,7 +84,6 @@ public class ExamServer extends BasicServer{
     }
 
     private void appointmentsHandler(HttpExchange exchange) {
-//        LocalDate date = LocalDate.now() ;
         List<Appointment> appointments = appointmentsManager.getAllAppointments();
 
 
