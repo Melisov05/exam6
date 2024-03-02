@@ -33,7 +33,30 @@ public class ExamServer extends BasicServer{
         registerGet("/monthlyAppointments", this::monthlyAppointmentsHandler);
         registerGet("/appointments/day", this::dayAppointmentsHandler);
         registerPost("/appointments/add", this::addAppointmentHandler);
+        registerPost("/appointments/delete", this::deleteAppointmentHandler);
     }
+
+    private void deleteAppointmentHandler(HttpExchange exchange) {
+        if ("POST".equals(exchange.getRequestMethod())) {
+            try {
+                InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8);
+                BufferedReader br = new BufferedReader(isr);
+                String formData = br.lines().collect(Collectors.joining("&"));
+                Map<String, String> parsedFormData = Utils.parseUrlEncoded(formData, "&");
+
+                String dateString = parsedFormData.get("date");
+
+                UUID id = UUID.fromString(parsedFormData.get("appointmentId"));
+                appointmentsManager.removeAppointment(id);
+
+                String redirectPath = "/appointments/day?date=" + dateString;
+                redirect303(exchange, redirectPath);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
     private void addAppointmentHandler(HttpExchange exchange) {
         if ("POST".equals(exchange.getRequestMethod())) {
@@ -49,7 +72,6 @@ public class ExamServer extends BasicServer{
                 String fullName = parsedFormData.get("fullName");
                 String patientType = parsedFormData.get("patientType");
                 String symptoms = parsedFormData.get("symptoms");
-
 
                 Appointment newAppointment = new Appointment(dateTime, new Patient(fullName, patientType, symptoms));
                 appointmentsManager.addAppointment(newAppointment);
@@ -98,7 +120,6 @@ public class ExamServer extends BasicServer{
         dataModel.put("appointments", appointmentsForDay);
         dataModel.put("selectedDate", selectedDateStr);
 
-
         renderTemplate(exchange, "data/dayAppointments.ftlh", dataModel);
     }
 
@@ -115,7 +136,6 @@ public class ExamServer extends BasicServer{
     private void appointmentsHandler(HttpExchange exchange) {
         List<Appointment> appointments = appointmentsManager.getAllAppointments();
 
-
         formatDate(appointments, "yyyy-MM-dd HH:mm");
 
         appointments.sort(Comparator.comparing(Appointment::getAppointmentTime));
@@ -123,9 +143,7 @@ public class ExamServer extends BasicServer{
         Map<String, Object> dataModel = new HashMap<>();
         dataModel.put("appointments", appointments);
 
-
         System.out.println(dataModel.get("appointments"));
-
         renderTemplate(exchange, "data/appointments.ftlh", dataModel);
 
     }

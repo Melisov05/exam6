@@ -1,8 +1,11 @@
 package entity;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class Appointment {
+
+    private UUID id;
     private LocalDateTime appointmentTime;
     private Patient patient;
 
@@ -33,7 +36,12 @@ public class Appointment {
     }
 
     public Appointment(LocalDateTime appointmentTime, Patient patient) {
+        this.id = UUID.randomUUID();
         this.appointmentTime = appointmentTime;
         this.patient = patient;
+    }
+
+    public UUID getId() {
+        return id;
     }
 }

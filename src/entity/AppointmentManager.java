@@ -3,6 +3,7 @@ package entity;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class AppointmentManager {
@@ -26,5 +27,7 @@ public class AppointmentManager {
         return new ArrayList<>(appointments);
     }
 
-
+    public void removeAppointment(UUID id) {
+        appointments.removeIf(appointment -> appointment.getId().equals(id));
+    }
 }

@@ -16,6 +16,12 @@
                 <p>Time: ${appointment.formattedTime}</p>
                 <p>Type: ${appointment.patient.patientType}</p>
                 <p>Symptoms: ${appointment.patient.symptoms}</p>
+
+                <form action="/appointments/delete" method="post" onsubmit="return confirm('Вы уверены, что хотите удалить эту запись?');">
+                            <input type="hidden" name="appointmentId" value="${appointment.id}">
+                            <input type="hidden" name="date" value="${selectedDate}">
+                            <button type="submit" class="btn btn-danger">Удалить</button>
+                </form>
             </div>
         </#list>
     </div>
