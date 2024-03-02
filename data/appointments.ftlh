@@ -25,7 +25,7 @@
                         <!-- Format the time -->
                         <td>${appointment.formattedTime}</td>
                         <td>${appointment.patient.fullName}</td>
-                        <td>${appointment.patient.dateOfBirth}</td>
+                        <td>${appointment.patient.dateOfBirth!"Не указана"}</td>
                         <td>${appointment.patient.patientType}</td>
                         <td>${appointment.patient.symptoms}</td>
                     </tr>
