@@ -25,4 +25,6 @@ public class AppointmentManager {
     public List<Appointment> getAllAppointments() {
         return new ArrayList<>(appointments);
     }
+
+
 }

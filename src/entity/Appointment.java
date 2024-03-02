@@ -8,6 +8,14 @@ public class Appointment {
 
     private String formattedTime;
 
+    public void setAppointmentTime(LocalDateTime appointmentTime) {
+        this.appointmentTime = appointmentTime;
+    }
+
+    public void setPatient(Patient patient) {
+        this.patient = patient;
+    }
+
     public void setFormattedTime(String formattedTime) {
         this.formattedTime = formattedTime;
     }

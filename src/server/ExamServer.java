@@ -1,6 +1,6 @@
 package server;
 
-import Utils.Generator;
+import utils.Generator;
 import com.sun.net.httpserver.HttpExchange;
 import entity.Appointment;
 import entity.AppointmentManager;
@@ -18,10 +18,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ExamServer extends BasicServer{
 
@@ -32,17 +30,38 @@ public class ExamServer extends BasicServer{
         super(host, port);
         initializeAppointments(appointmentsManager);
         registerGet("/appointments", this::appointmentsHandler);
+        registerGet("/monthlyAppointments", this::monthlyAppointmentsHandler);
+    }
+
+    private void monthlyAppointmentsHandler(HttpExchange exchange) {
+        List<Appointment> appointments = getAppointmentsForCurrentMonth();
+
+        formatDate(appointmentsManager, "MM-dd HH:mm");
+
+        appointments.sort(Comparator.comparing(Appointment::getAppointmentTime));
+
+        Map<String, Object> dataModel = new HashMap<>();
+        dataModel.put("appointments", appointments);
+        renderTemplate(exchange, "data/montlyAppointments.ftlh", dataModel);
+    }
+
+    private List<Appointment> getAppointmentsForCurrentMonth() {
+        LocalDate startOfMonth = LocalDate.now().withDayOfMonth(1);
+        LocalDate endOfMonth = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
+        return appointmentsManager.getAllAppointments().stream()
+                .filter(appointment -> !appointment.getAppointmentTime().toLocalDate().isBefore(startOfMonth) &&
+                        !appointment.getAppointmentTime().toLocalDate().isAfter(endOfMonth))
+                .collect(Collectors.toList());
     }
 
     private void appointmentsHandler(HttpExchange exchange) {
 //        LocalDate date = LocalDate.now() ;
         List<Appointment> appointments = appointmentsManager.getAllAppointments();
 
-        for (Appointment appointment : appointments) {
-            String formattedTime = appointment.getAppointmentTime()
-                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-            appointment.setFormattedTime(formattedTime);
-        }
+
+        formatDate(appointmentsManager, "yyyy-MM-dd HH:mm");
+
+        appointments.sort(Comparator.comparing(Appointment::getAppointmentTime));
 
         Map<String, Object> dataModel = new HashMap<>();
         dataModel.put("appointments", appointments);
@@ -52,6 +71,15 @@ public class ExamServer extends BasicServer{
 
         renderTemplate(exchange, "data/appointments.ftlh", dataModel);
 
+    }
+
+    private void formatDate(AppointmentManager manager, String pattern){
+        List<Appointment> list = manager.getAllAppointments();
+        for (Appointment appointment : list) {
+            String formattedTime = appointment.getAppointmentTime()
+                    .format(DateTimeFormatter.ofPattern(pattern));
+            appointment.setFormattedTime(formattedTime);
+       }
     }
 
     public static void initializeAppointments(AppointmentManager manager) {
